@@ -1,0 +1,58 @@
+name: Rust
+
+on:
+  push:
+  pull_request:
+
+env:
+  RUSTFLAGS: -D warnings
+
+jobs:
+
+  complete:
+    if: always()
+    needs: [rust-analyzer-compat, build-and-test, publish-dry-run]
+    runs-on: ubuntu-latest
+    steps:
+    - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      run: exit 1
+
+  rust-analyzer-compat:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: rustup update
+    - run: rustup +nightly component add rust-analyzer
+    - name: Check if rust-analyzer encounters any errors parsing project
+      run: rustup run nightly rust-analyzer analysis-stats . 2>&1 | (! grep ERROR)
+
+  build-and-test:
+    strategy:
+      matrix:
+        sys:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.sys.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: hcnet/actions/rust-cache@main
+    - run: rustup update
+    - run: rustup target add ${{ matrix.sys.target }}
+    - run: cargo install --target-dir ~/.cargo/target --locked --version 0.5.16 cargo-hack
+    - run: git submodule update --init --recursive
+    - run: cargo hack build --target ${{ matrix.sys.target }}
+    - run: cargo hack test --target ${{ matrix.sys.target }}
+
+  publish-dry-run:
+    if: startsWith(github.head_ref, 'release/')
+    strategy:
+      matrix:
+        sys:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+          cargo-hack-feature-options: ''
+    uses: hcnet/actions/.github/workflows/rust-publish-dry-run.yml@main
+    with:
+      runs-on: ${{ matrix.sys.os }}
+      cargo-hack-feature-options: ${{ matrix.sys.cargo-hack-feature-options }}
+      target: ${{ matrix.sys.target }}

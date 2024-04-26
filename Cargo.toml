@@ -1,0 +1,17 @@
+[workspace]
+members = ["crates/arena", "crates/cli", "crates/core", "crates/wasmi", "crates/wasi"]
+exclude = []
+resolver = "2"
+
+[workspace.package]
+authors = ["Hcnet Development Foundation <info@hcnet.org>"]
+repository = "https://github.com/shantanu-hashcash/wasmi"
+edition = "2021"
+readme = "README.md"
+license = "MIT/Apache-2.0"
+keywords = ["wasm", "webassembly", "interpreter", "vm"]
+categories = ["wasm", "no-std", "virtualization"]
+
+[profile.bench]
+lto = "fat"
+codegen-units = 1
