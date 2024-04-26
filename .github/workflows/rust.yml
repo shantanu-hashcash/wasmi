@@ -20,7 +20,7 @@ jobs:
   rust-analyzer-compat:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: rustup update
     - run: rustup +nightly component add rust-analyzer
     - name: Check if rust-analyzer encounters any errors parsing project
@@ -34,7 +34,7 @@ jobs:
           target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.sys.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: hcnet/actions/rust-cache@main
     - run: rustup update
     - run: rustup target add ${{ matrix.sys.target }}
